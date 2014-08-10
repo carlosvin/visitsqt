@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core gui
+QT       += core gui sql
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -16,11 +16,13 @@ SOURCES += main.cpp\
         mainwindow.cpp \
     visitsmodel.cpp \
     visit.cpp \
-    visitdelegate.cpp
+    visitdelegate.cpp \
+    databasemanager.cpp
 
 HEADERS  += mainwindow.h \
     visitsmodel.h \
     visit.h \
-    visitdelegate.h
+    visitdelegate.h \
+    databasemanager.h
 
 FORMS    += mainwindow.ui

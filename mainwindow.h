@@ -5,6 +5,7 @@
 #include <QMainWindow>
 #include "visitsmodel.h"
 #include "visitdelegate.h"
+#include "databasemanager.h"
 
 namespace Ui {
 class MainWindow;
@@ -15,7 +16,7 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    explicit MainWindow(QWidget *parent = 0);
+    explicit MainWindow(DatabaseManager * dbManager, QWidget *parent = 0);
     ~MainWindow();
 
 private slots:
@@ -30,6 +31,7 @@ private:
     Ui::MainWindow *ui;
     VisitsModel visitsModel;
     VisitDelegate visitDelegate;
+    DatabaseManager * dbManager;
 };
 
 #endif // MAINWINDOW_H

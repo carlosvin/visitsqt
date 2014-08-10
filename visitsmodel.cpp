@@ -2,16 +2,13 @@
 
 QString VisitsModel::COL_NAMES[Visit::MAX_TYPES + 1] = {"Fecha", "Hombres", "Mujeres", "Ninos", "Ninas" };
 
-VisitsModel::VisitsModel(QObject *parent) :
-    QAbstractTableModel(parent)
+VisitsModel::VisitsModel(DatabaseManager *  dbManager, QObject *parent) :
+    QAbstractTableModel(parent),
+    dbManager(dbManager)
 {
-//    visits.setInsertInOrder(true);
-}
-
-
-VisitsModel::VisitsModel(const QSet<Visit> & visits, QObject *parent)
-    : QAbstractTableModel(parent)
-{
+    this->dbManager = dbManager;
+    QList<Visit> visits;
+    dbManager->loadVisits(visits);
     foreach (Visit visit, visits) {
         this->visits[visit.getDate()] = visit;
     }
@@ -43,12 +40,17 @@ QVariant VisitsModel::data(const QModelIndex &index, int role) const
 
         QDate key = visits.keys()[row];
         const int col = index.column();
-        if (col == 0){
+        if (col == 0)
+        {
             return QVariant(visits[key].getDate());
-        } else {
+        }
+        else
+        {
             return QVariant(visits[key].getVisit(static_cast<VisitType>(col - 1)));
         }
-    } else {
+    }
+    else
+    {
         return QVariant();
     }
 }
@@ -73,7 +75,7 @@ bool VisitsModel::insertRows(int position, int rows, const QModelIndex &index)
     Visit v;
     if (rows > 0 && !visits.contains(v.getDate()))
     {
-        beginInsertRows(index, position-1, position);
+        beginInsertRows(QModelIndex(), position, position);
         visits[v.getDate()]= v;
         endInsertRows();
         return true;
@@ -92,7 +94,11 @@ bool VisitsModel::removeRows(int position, int rows, const QModelIndex &index)
 
     for (int row=position; row < rows; row++) {
         QDate k = visits.keys()[row];
-        visits.remove(k);
+        if(dbManager->deleteVisit(k)){
+            visits.remove(k);
+        }else{
+            qDebug() << "deleted " << k;
+        }
     }
 
     endRemoveRows();
@@ -112,9 +118,17 @@ bool VisitsModel::setData(const QModelIndex &index, const QVariant &value, int r
                 v.setDate(newDate);
                 visits.remove(oldDate);
                 visits[newDate] = v;
+                dbManager->deleteVisit(oldDate);
+                if (!dbManager->insertVisit(v))
+                {
+                    qDebug() << dbManager->lastError();
+                }
             }
-        }else{
+        }
+        else
+        {
             visits[visits.keys()[index.row()]].setVisit(static_cast<VisitType>(col - 1), value.value<int>());
+            //dbManager->updateVisit();
         }
         emit(dataChanged(index, index));
         return true;

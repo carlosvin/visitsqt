@@ -26,6 +26,17 @@ public:
     void setDate(const QDate & inputDate);
     void setVisit(VisitType visitType, int number);
 
+
+    inline uint qHash(const Visit &key)
+    {
+        return key.date.month() ^ key.date.day() ^ key.date.year();
+    }
+
+    inline uint qHash()
+    {
+        return qHash(*this);
+    }
+
 private:
     QDate date;
     int visits [MAX_TYPES];
