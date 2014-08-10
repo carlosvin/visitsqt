@@ -20,12 +20,10 @@ public:
     bool setData(const QModelIndex &index, const QVariant &value, int role=Qt::EditRole);
     bool insertRows(int position, int rows, const QModelIndex &index=QModelIndex());
     bool removeRows(int position, int rows, const QModelIndex &index=QModelIndex());
-
  private:
     static QString COL_NAMES [Visit::MAX_TYPES + 1];
 
-    QList<Visit> visitsList;
-    QSet<QString> dates;
+    QMap<QDate,Visit> visits;
 
 signals:
 

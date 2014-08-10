@@ -30,7 +30,6 @@ private:
     Ui::MainWindow *ui;
     VisitsModel visitsModel;
     VisitDelegate visitDelegate;
-    QProxyModel proxyModel;
 };
 
 #endif // MAINWINDOW_H

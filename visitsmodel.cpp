@@ -5,6 +5,7 @@ QString VisitsModel::COL_NAMES[Visit::MAX_TYPES + 1] = {"Fecha", "Hombres", "Muj
 VisitsModel::VisitsModel(QObject *parent) :
     QAbstractTableModel(parent)
 {
+//    visits.setInsertInOrder(true);
 }
 
 
@@ -12,15 +13,14 @@ VisitsModel::VisitsModel(const QSet<Visit> & visits, QObject *parent)
     : QAbstractTableModel(parent)
 {
     foreach (Visit visit, visits) {
-        dates << visit.getDate().toString();
-        visitsList.append(visit);
+        this->visits[visit.getDate()] = visit;
     }
 }
 
 int VisitsModel::rowCount(const QModelIndex &parent) const
 {
     Q_UNUSED(parent);
-    return visitsList.count();
+    return visits.count();
 }
 
 int VisitsModel::columnCount(const QModelIndex &parent) const
@@ -34,17 +34,19 @@ QVariant VisitsModel::data(const QModelIndex &index, int role) const
     if (!index.isValid())
         return QVariant();
 
-    const int row = index.row();
+    if (role == Qt::DisplayRole || role == Qt::EditRole)
+    {
+        const int row = index.row();
 
-    if (row > visitsList.size() || row < 0)
-        return QVariant();
+        if (row >= visits.count() || row < 0)
+            return QVariant();
 
-    if (role == Qt::DisplayRole || role == Qt::EditRole) {
+        QDate key = visits.keys()[row];
         const int col = index.column();
         if (col == 0){
-            return QVariant(visitsList[row].getDate());
+            return QVariant(visits[key].getDate());
         } else {
-            return QVariant(visitsList[row].getVisit(static_cast<VisitType>(col - 1)));
+            return QVariant(visits[key].getVisit(static_cast<VisitType>(col - 1)));
         }
     } else {
         return QVariant();
@@ -69,12 +71,10 @@ bool VisitsModel::insertRows(int position, int rows, const QModelIndex &index)
     Q_UNUSED(index);
 
     Visit v;
-    if (rows > 0 && !dates.contains(v.getDate().toString()))
+    if (rows > 0 && !visits.contains(v.getDate()))
     {
-        beginInsertRows(index, position, position+1);
-        dates << v.getDate().toString();
-        visitsList.insert(position, v);
-        qDebug() << visitsList.count() << " == " << dates.count();
+        beginInsertRows(index, position-1, position);
+        visits[v.getDate()]= v;
         endInsertRows();
         return true;
     }
@@ -85,17 +85,14 @@ bool VisitsModel::insertRows(int position, int rows, const QModelIndex &index)
     }
 }
 
-
-
 bool VisitsModel::removeRows(int position, int rows, const QModelIndex &index)
 {
     Q_UNUSED(index);
     beginRemoveRows(index, position, position+rows-1);
 
     for (int row=position; row < rows; row++) {
-        QDate date = visitsList[row].getDate();
-        visitsList.removeAt(row);
-        dates.remove(date.toString());
+        QDate k = visits.keys()[row];
+        visits.remove(k);
     }
 
     endRemoveRows();
@@ -108,17 +105,16 @@ bool VisitsModel::setData(const QModelIndex &index, const QVariant &value, int r
         int col = index.column();
         if (col==0){
             QDate newDate = value.value<QDate>();
-            QString newDateStr = newDate.toString();
-            QString oldDateStr = visitsList[index.row()].getDate().toString();
-            if (newDateStr != oldDateStr && !dates.contains(newDateStr))
+            QDate oldDate = visits.keys()[index.row()];
+            if (newDate != oldDate && !visits.contains(newDate))
             {
-                dates << newDateStr;
-                dates.remove(oldDateStr);
-                visitsList[index.row()].setDate(newDate);
-
+                Visit v = visits[oldDate];
+                v.setDate(newDate);
+                visits.remove(oldDate);
+                visits[newDate] = v;
             }
         }else{
-            visitsList[index.row()].setVisit(static_cast<VisitType>(col - 1), value.value<int>());
+            visits[visits.keys()[index.row()]].setVisit(static_cast<VisitType>(col - 1), value.value<int>());
         }
         emit(dataChanged(index, index));
         return true;

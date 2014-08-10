@@ -7,9 +7,7 @@ MainWindow::MainWindow(QWidget *parent) :
     visitsModel(parent)
 {
     ui->setupUi(this);
-    proxyModel.setModel(&visitsModel);
-
-    ui->tableView->setModel(&proxyModel);
+    ui->tableView->setModel(&visitsModel);
     ui->tableView->setItemDelegate(&visitDelegate);
 
     connect(ui->tableView->horizontalHeader(), SIGNAL(sectionClicked(int)),
@@ -36,6 +34,5 @@ void MainWindow::on_addButton_clicked()
 
 void MainWindow::slot_table_clicked(int col){
     qDebug() << "sort col " << col;
-    proxyModel.sort(col);
 
 }
