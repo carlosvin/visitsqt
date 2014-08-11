@@ -109,9 +109,11 @@ bool VisitsModel::setData(const QModelIndex &index, const QVariant &value, int r
 {
     if (index.isValid() && role == Qt::EditRole) {
         int col = index.column();
-        if (col==0){
+        int row = index.row();
+        if (col==0)
+        {
             QDate newDate = value.value<QDate>();
-            QDate oldDate = visits.keys()[index.row()];
+            QDate oldDate = visits.keys()[row];
             if (newDate != oldDate && !visits.contains(newDate))
             {
                 Visit v = visits[oldDate];
@@ -127,8 +129,12 @@ bool VisitsModel::setData(const QModelIndex &index, const QVariant &value, int r
         }
         else
         {
-            visits[visits.keys()[index.row()]].setVisit(static_cast<VisitType>(col - 1), value.value<int>());
-            //dbManager->updateVisit();
+            QDate key = visits.keys()[row];
+            visits[key].setVisit(static_cast<VisitType>(col - 1), value.value<int>());
+            if (!dbManager->updateVisit(visits[key]))
+            {
+                qDebug()<< "cannot update " + key.toString();
+            }
         }
         emit(dataChanged(index, index));
         return true;

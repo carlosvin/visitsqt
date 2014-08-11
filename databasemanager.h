@@ -7,6 +7,26 @@
 #include <QFile>
 #include "visit.h"
 
+class Query {
+private:
+    static const QString CREATE_TABLE;
+    static const QString CREATE;
+    static const QString READ;
+    static const QString UPDATE;
+    static const QString DELETE;
+    static const QString READ_ALL;
+
+public:
+    const QString createTable;
+    const QString create;
+    const QString read;
+    const QString update;
+    const QString del;
+    const QString readAll;
+
+    Query(const char * tableName);
+};
+
 class DatabaseManager : public QObject
 {
 public:
@@ -23,6 +43,7 @@ public:
     bool deleteDB();
     bool createVisitsTable();
     bool insertVisit(const Visit & visit);
+    bool updateVisit(const Visit & visit);
     bool getVisit(const QDate & date, Visit & visit);
     bool loadVisits(QList<Visit> & visits);
     bool deleteVisit(const QDate & date);
@@ -30,6 +51,7 @@ public:
     QSqlError lastError();
 
 private:
+    const Query querySet;
     QSqlDatabase db;
 };
 

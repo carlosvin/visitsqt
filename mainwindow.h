@@ -1,7 +1,6 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include <QProxyModel>
 #include <QMainWindow>
 #include "visitsmodel.h"
 #include "visitdelegate.h"
@@ -25,7 +24,7 @@ private slots:
 
     void on_addButton_clicked();
 
-    void slot_table_clicked(int col);
+//    void slot_table_clicked(int col);
 
 private:
     Ui::MainWindow *ui;

@@ -12,8 +12,8 @@ MainWindow::MainWindow(DatabaseManager * dbManager, QWidget *parent) :
     ui->tableView->setModel(&visitsModel);
     ui->tableView->setItemDelegate(&visitDelegate);
 
-    connect(ui->tableView->horizontalHeader(), SIGNAL(sectionClicked(int)),
-            this, SLOT(slot_table_clicked(int)));
+//    connect(ui->tableView->horizontalHeader(), SIGNAL(sectionClicked(int)),
+//            this, SLOT(slot_table_clicked(int)));
 }
 
 MainWindow::~MainWindow()
@@ -34,7 +34,7 @@ void MainWindow::on_addButton_clicked()
 
 }
 
-void MainWindow::slot_table_clicked(int col){
-    qDebug() << "sort col " << col;
+//void MainWindow::slot_table_clicked(int col){
+//    qDebug() << "sort col " << col;
 
-}
+//}

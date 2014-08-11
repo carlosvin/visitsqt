@@ -46,7 +46,7 @@ QDate Visit::getDate() const{
 }
 
 void Visit::setDate(const QDate & inputDate){
-    date.setYMD(inputDate.year(), inputDate.month(), inputDate.day());
+    date.setDate(inputDate.year(), inputDate.month(), inputDate.day());
 }
 
 void Visit::setVisit(VisitType visitType, int number){

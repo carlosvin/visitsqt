@@ -2,11 +2,31 @@
 #include <QDir>
 #include <QSqlQuery>
 
+const QString Query::CREATE_TABLE("create table %1 (date date primary key, men integer, women integer, boys integer,girls integer)");
+const QString Query::CREATE("INSERT INTO %1 (date, men, women, boys, girls) VALUES (?, ?, ?, ?, ?)");
+const QString Query::READ("select * from %1 where date = ");
+const QString Query::UPDATE("UPDATE %1 set men=?, women=?, boys=?, girls=? WHERE date=");
+const QString Query::DELETE("delete from %1 where date = ");
+const QString Query::READ_ALL("select * from %1");
+
+Query::Query(const char * tableName):
+    createTable(Query::CREATE_TABLE.arg(tableName)),
+    create(Query::CREATE.arg(tableName)),
+    read(Query::READ.arg(tableName)),
+    update(Query::UPDATE.arg(tableName)),
+    del(Query::DELETE.arg(tableName)),
+    readAll(Query::READ_ALL.arg(tableName))
+{
+
+}
+
 const char * DatabaseManager::DB_NAME = "visits.sqlite.db";
 const char * DatabaseManager::DATE_FORMAT = "yyyy-MM-dd";
 const char * DatabaseManager::TABLE_NAME = "visits";
 
-DatabaseManager::DatabaseManager(QObject* parent):QObject(parent)
+DatabaseManager::DatabaseManager(QObject* parent):
+    QObject(parent),
+    querySet(DatabaseManager::TABLE_NAME)
 {
 
 }
@@ -34,8 +54,6 @@ bool DatabaseManager::openDB()
 
 QSqlError DatabaseManager::lastError()
 {
-    // If opening database has failed user can ask
-    // error description by QSqlError::text()
     return db.lastError();
 }
 
@@ -47,7 +65,7 @@ bool DatabaseManager::deleteDB()
     #ifdef Q_OS_LINUX
     // NOTE: We have to store database file into user home folder in Linux
     QString path(QDir::home().path());
-    path.append(QDir::separator()).append(DB_NAME);
+    path.append(QDir::separator()).append(TABLE_NAME);
     path = QDir::toNativeSeparators(path);
     return QFile::remove(path);
     #else
@@ -59,20 +77,14 @@ bool DatabaseManager::deleteDB()
 
 bool DatabaseManager::createVisitsTable()
 {
-    bool ret = false;
     if (db.isOpen())
     {
-        QSqlQuery query;
-        ret = query.exec(
-             "create table visits "
-             "(date date primary key, "
-             "men integer, "
-             "women integer, "
-             "boys integer, "
-             "girls integer)");
-
+        return QSqlQuery(querySet.createTable).exec();
     }
-    return ret;
+    else
+    {
+        return false;
+    }
 }
 
 bool DatabaseManager::insertVisit(const Visit & visit)
@@ -80,9 +92,32 @@ bool DatabaseManager::insertVisit(const Visit & visit)
     if (db.isOpen())
     {
         QSqlQuery query;
-        query.prepare("INSERT INTO visits (date, men, women, boys, girls) "
-                           "VALUES (?, ?, ?, ?, ?)");
+        query.prepare(querySet.create);
         query.addBindValue(visit.getDate().toString(DATE_FORMAT));
+        for (int i=0; i<Visit::MAX_TYPES; i++)
+        {
+            query.addBindValue(visit.getVisit(static_cast<VisitType>(i)));
+        }
+        if (query.exec()){
+            return true;
+        }else{
+            qDebug()<< query.lastError();
+            return false;
+        }
+    }
+    else
+    {
+        return false;
+    }
+}
+
+
+bool DatabaseManager::updateVisit(const Visit & visit)
+{
+    if (db.isOpen())
+    {
+        QSqlQuery query;
+        query.prepare(querySet.update + visit.getDate().toString(DATE_FORMAT));
         for (int i=0; i<Visit::MAX_TYPES; i++)
         {
             query.addBindValue(visit.getVisit(static_cast<VisitType>(i)));
@@ -104,7 +139,7 @@ bool DatabaseManager::insertVisit(const Visit & visit)
 bool DatabaseManager::getVisit(const QDate & date, Visit & visit)
 {
 
-    QSqlQuery query(QString("select * from visits where date = %1").arg(date.toString(DATE_FORMAT)));
+    QSqlQuery query(querySet.read + date.toString(DATE_FORMAT));
     if (query.next())
     {
         loadDataFromQuery(query, visit);
@@ -118,7 +153,7 @@ bool DatabaseManager::getVisit(const QDate & date, Visit & visit)
 
 bool DatabaseManager::loadVisits(QList<Visit> & visits)
 {
-    QSqlQuery query(QString("select * from visits"));
+    QSqlQuery query(querySet.readAll);
     while(query.next()){
         Visit visit;
         loadDataFromQuery(query, visit);
@@ -139,7 +174,5 @@ void DatabaseManager::loadDataFromQuery(QSqlQuery & query, Visit & visit)
 
 bool DatabaseManager::deleteVisit(const QDate & date)
 {
-
-    QSqlQuery query(QString("delete from visits where date = %1").arg(date.toString(DATE_FORMAT)));
-    return query.exec();
+    return QSqlQuery(querySet.del + date.toString(DATE_FORMAT)).exec();
 }
