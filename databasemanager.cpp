@@ -4,9 +4,9 @@
 
 const QString Query::CREATE_TABLE("create table %1 (date date primary key, men integer, women integer, boys integer,girls integer)");
 const QString Query::CREATE("INSERT INTO %1 (date, men, women, boys, girls) VALUES (?, ?, ?, ?, ?)");
-const QString Query::READ("select * from %1 where date = ");
-const QString Query::UPDATE("UPDATE %1 set men=?, women=?, boys=?, girls=? WHERE date=");
-const QString Query::DELETE("delete from %1 where date = ");
+const QString Query::READ("select * from %1 where date='%2'");
+const QString Query::UPDATE("UPDATE %1 set men=?, women=?, boys=?, girls=? WHERE date='%2'");
+const QString Query::DELETE("delete from %1 where date='%2'");
 const QString Query::READ_ALL("select * from %1");
 
 Query::Query(const char * tableName):
@@ -117,18 +117,21 @@ bool DatabaseManager::updateVisit(const Visit & visit)
     if (db.isOpen())
     {
         QSqlQuery query;
-        query.prepare(querySet.update + visit.getDate().toString(DATE_FORMAT));
+        query.prepare(querySet.update.arg(visit.getDate().toString(DATE_FORMAT)));
         for (int i=0; i<Visit::MAX_TYPES; i++)
         {
             query.addBindValue(visit.getVisit(static_cast<VisitType>(i)));
         }
         bool result = query.exec();
-        if (result){
-            return true;
-        }else{
-            qDebug()<< query.lastError();
-            return false;
+        if (result)
+        {
+            qDebug()<< "updated " <<visit.getDate().toString(DATE_FORMAT);
         }
+        else
+        {
+            qDebug()<< query.lastError();
+        }
+        return result;
     }
     else
     {
@@ -139,7 +142,7 @@ bool DatabaseManager::updateVisit(const Visit & visit)
 bool DatabaseManager::getVisit(const QDate & date, Visit & visit)
 {
 
-    QSqlQuery query(querySet.read + date.toString(DATE_FORMAT));
+    QSqlQuery query(querySet.read.arg(date.toString(DATE_FORMAT)));
     if (query.next())
     {
         loadDataFromQuery(query, visit);
@@ -174,5 +177,5 @@ void DatabaseManager::loadDataFromQuery(QSqlQuery & query, Visit & visit)
 
 bool DatabaseManager::deleteVisit(const QDate & date)
 {
-    return QSqlQuery(querySet.del + date.toString(DATE_FORMAT)).exec();
+    return QSqlQuery(querySet.del.arg(date.toString(DATE_FORMAT))).exec();
 }

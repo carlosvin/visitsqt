@@ -75,10 +75,20 @@ bool VisitsModel::insertRows(int position, int rows, const QModelIndex &index)
     Visit v;
     if (rows > 0 && !visits.contains(v.getDate()))
     {
-        beginInsertRows(QModelIndex(), position, position);
-        visits[v.getDate()]= v;
-        endInsertRows();
-        return true;
+        if(dbManager->insertVisit(v))
+        {
+            beginInsertRows(QModelIndex(), position, position);
+            visits[v.getDate()]= v;
+            endInsertRows();
+            qDebug() << "inserted " << v.getDate();
+            return true;
+        }
+        else
+        {
+            qDebug() << "cannot insert " << v.getDate();
+            return false;
+        }
+
     }
     else
     {
