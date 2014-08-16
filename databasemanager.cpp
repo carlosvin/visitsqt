@@ -37,16 +37,16 @@ bool DatabaseManager::openDB()
     // Find QSLite driver
     db = QSqlDatabase::addDatabase("QSQLITE");
 
-    #ifdef Q_OS_LINUX
+    //#ifdef Q_OS_LINUX
     // NOTE: We have to store database file into user home folder in Linux
     QString path(QDir::home().path());
     path.append(QDir::separator()).append(DB_NAME);
     path = QDir::toNativeSeparators(path);
     db.setDatabaseName(path);
-    #else
+    //#else
     // NOTE: File exists in the application private folder, in Symbian Qt implementation
-    db.setDatabaseName(DB_NAME);
-    #endif
+    //db.setDatabaseName(DB_NAME);
+    //#endif
 
     // Open databasee
     return db.open();
